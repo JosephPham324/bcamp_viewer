@@ -22,67 +22,139 @@ function renderWorkoutTable(dayIndex, workout, weekdayNames = ["Sun", "Mon", "Tu
   table.appendChild(thead);
 
   const tbody = document.createElement("tbody");
+  console.log(workout.exercises);
+  const renderWorkout = (workout) => {
+    // const tbody = document.querySelector("#exercise-table tbody");
+    tbody.innerHTML = "";
 
-  (workout.exercises || []).forEach((exercise, idx) => {
-    const sets = Array.isArray(exercise.sets) ? exercise.sets : [];
+    // Helper to render a single exercise or superset group
+    const renderExercise = (exercise, idx, supersetLabel = null) => {
+      const sets = Array.isArray(exercise.sets) ? exercise.sets : [];
 
-    const isUniformSets =
-      sets.length > 0 &&
-      sets.every(
-        (s) =>
-          s?.target === sets[0]?.target &&
-          s?.intensity === sets[0]?.intensity &&
-          s?.target_type === sets[0]?.target_type &&
-          s?.intensity_unit === sets[0]?.intensity_unit
-      );
+      // Title row
+      const titleRow = document.createElement("tr");
+      const labelCol = supersetLabel ? `${idx + 1}${supersetLabel}` : idx + 1;
+      titleRow.innerHTML = `
+        <td class="text-orange">${labelCol}</td>
+        <td class="exercise-name" colspan="4">${exercise.name || "Unknown"}</td>
+      `;
+      tbody.appendChild(titleRow);
 
-    const titleRow = document.createElement("tr");
-    titleRow.innerHTML = `
-      <td class="text-orange">${idx + 1}</td>
-      <td class="exercise-name" colspan="4">${exercise.name || "Unknown"}</td>
-    `;
-    tbody.appendChild(titleRow);
-
-    // Group sets (either way)
-    if (sets.length > 0) {
-      let grouped = [];
-      for (let i = 0; i < sets.length; i++) {
-        const current = sets[i];
-        const prev = grouped[grouped.length - 1];
-
-        if (
-          prev &&
-          current.target === prev.target &&
-          current.intensity === prev.intensity &&
-          current.target_type === prev.target_type &&
-          current.intensity_unit === prev.intensity_unit
-        ) {
-          prev.count += 1;
-        } else {
-          grouped.push({ ...current, count: 1 });
+      // Render grouped set lines
+      if (sets.length > 0) {
+        // Group similar sets
+        const grouped = [];
+        for (let i = 0; i < sets.length; i++) {
+          const curr = sets[i];
+          const prev = grouped[grouped.length - 1];
+          if (
+            prev &&
+            curr.target === prev.target &&
+            curr.target_min === prev.target_min &&
+            curr.target_max === prev.target_max &&
+            curr.target_type === prev.target_type &&
+            curr.intensity_unit === prev.intensity_unit
+          ) {
+            prev.count++;
+          } else {
+            grouped.push({ ...curr, count: 1 });
+          }
         }
+
+        grouped.forEach((set) => {
+          const reps =
+            set.target_type === "reps_range"
+              ? `${set.target_min}-${set.target_max} reps`
+              : `${set.target}${set.target_type === "reps_max" ? "+" : ""} reps`;
+          const intensity = set.intensity !== undefined ? (set.intensity_unit === "%" ? `${set.intensity}%` : `RPE ${set.intensity}`) : "-";
+
+          const subRow = document.createElement("tr");
+          subRow.innerHTML = `
+            <td></td>
+            <td></td>
+            <td>${set.count}</td>
+            <td>${reps}</td>
+            <td>${intensity}</td>
+          `;
+          tbody.appendChild(subRow);
+        });
       }
+    };
 
-      grouped.forEach((set) => {
-        const reps =
-          set.target_type === "reps_range"
-            ? `${set.target_min ?? "?"}-${set.target_max ?? "?"} reps`
-            : `${set.target ?? "?"}${set.target_type === "reps_max" ? "+" : ""} reps`;
+    workout.exercises.forEach((exercise, idx) => {
+      // If this exercise has supersets, render each superset
+      if (Array.isArray(exercise.supersets) && exercise.supersets.length > 0) {
+        exercise.supersets.forEach((sup, sidx) => {
+          // Label subs as A, B, etc. for supersets
+          const letter = String.fromCharCode(65 + sidx);
+          renderExercise(sup, idx, letter);
+        });
+      } else {
+        renderExercise(exercise, idx);
+      }
+    });
+  };
+  renderWorkout(workout);
+  //   (workout.exercises || []).forEach((exercise, idx) => {
+  //     const sets = Array.isArray(exercise.sets) ? exercise.sets : [];
 
-        const intensity = set.intensity !== undefined ? (set.intensity_unit === "%" ? `${set.intensity}%` : `RPE ${set.intensity}`) : "-";
+  //     const isUniformSets =
+  //       sets.length > 0 &&
+  //       sets.every(
+  //         (s) =>
+  //           s?.target === sets[0]?.target &&
+  //           s?.intensity === sets[0]?.intensity &&
+  //           s?.target_type === sets[0]?.target_type &&
+  //           s?.intensity_unit === sets[0]?.intensity_unit
+  //       );
 
-        const sub = document.createElement("tr");
-        sub.innerHTML = `
-          <td></td>
-          <td></td>
-          <td>${set.count}</td>
-          <td>${reps}</td>
-          <td>${intensity}</td>
-        `;
-        tbody.appendChild(sub);
-      });
-    }
-  });
+  //     const titleRow = document.createElement("tr");
+  //     titleRow.innerHTML = `
+  //       <td class="text-orange">${idx + 1}</td>
+  //       <td class="exercise-name" colspan="4">${exercise.name || "Unknown"}</td>
+  //     `;
+  //     tbody.appendChild(titleRow);
+
+  //     // Group sets (either way)
+  //     if (sets.length > 0) {
+  //       let grouped = [];
+  //       for (let i = 0; i < sets.length; i++) {
+  //         const current = sets[i];
+  //         const prev = grouped[grouped.length - 1];
+
+  //         if (
+  //           prev &&
+  //           current.target === prev.target &&
+  //           current.intensity === prev.intensity &&
+  //           current.target_type === prev.target_type &&
+  //           current.intensity_unit === prev.intensity_unit
+  //         ) {
+  //           prev.count += 1;
+  //         } else {
+  //           grouped.push({ ...current, count: 1 });
+  //         }
+  //       }
+
+  //       grouped.forEach((set) => {
+  //         const reps =
+  //           set.target_type === "reps_range"
+  //             ? `${set.target_min ?? "?"}-${set.target_max ?? "?"} reps`
+  //             : `${set.target ?? "?"}${set.target_type === "reps_max" ? "+" : ""} reps`;
+
+  //         const intensity = set.intensity !== undefined ? (set.intensity_unit === "%" ? `${set.intensity}%` : `RPE ${set.intensity}`) : "-";
+
+  //         const sub = document.createElement("tr");
+  //         sub.innerHTML = `
+  //           <td></td>
+  //           <td></td>
+  //           <td>${set.count}</td>
+  //           <td>${reps}</td>
+  //           <td>${intensity}</td>
+  //         `;
+  //         tbody.appendChild(sub);
+  //       });
+  //     }
+  //   });
   table.appendChild(tbody);
   wrapper.appendChild(table);
 
@@ -95,6 +167,9 @@ document.getElementById("form").addEventListener("submit", async function (e) {
   const container = document.getElementById("program-container");
   error.textContent = "";
   container.style.display = "none";
+  document.querySelectorAll(".mt-5.tablesContainer").forEach((el) => {
+    el.remove();
+  });
 
   try {
     const res = await fetch(url);
@@ -136,7 +211,7 @@ document.getElementById("form").addEventListener("submit", async function (e) {
 
     const weekdayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const tablesContainer = document.createElement("div");
-    tablesContainer.className = "mt-5";
+    tablesContainer.classList = "mt-5 tablesContainer";
 
     const variations = data.variations || [];
     if (!Array.isArray(variations)) {
