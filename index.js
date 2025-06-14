@@ -172,7 +172,10 @@ document.getElementById("form").addEventListener("submit", async function (e) {
   });
 
   try {
-    const res = await fetch(url);
+    const proxyBase = "https://api.allorigins.win/raw?url=";
+
+    const res = await fetch(proxyBase + encodeURIComponent(url));
+
     const html = await res.text();
 
     const doc = new DOMParser().parseFromString(html, "text/html");
