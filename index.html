@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Program Viewer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 60px;
+            font-family: Arial, sans-serif;
+        }
+
+        #form {
+            max-width: 800px;
+            margin: 0 auto 40px;
+        }
+
+        #url {
+            height: 60px;
+            font-size: 1.25rem;
+        }
+
+        #form button {
+            height: 60px;
+            font-size: 1.25rem;
+        }
+
+        .banner {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            margin-bottom: 20px;
+        }
+
+        #program-container {
+            display: none;
+        }
+
+        .workout-card {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            background-color: #fff;
+        }
+
+        .workout-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .workout-table thead th {
+            font-weight: 600;
+            color: #999;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .workout-table td {
+            border: none;
+            padding: 6px 8px;
+            vertical-align: middle;
+        }
+
+        .workout-table tr+tr {
+            border-top: 1px solid #eee;
+        }
+
+        .workout-table .exercise-name {
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container text-center">
+        <form id="form" class="row g-3 align-items-center justify-content-center">
+            <div class="col-md-9">
+                <input type="url" class="form-control" id="url" placeholder="Enter program URL..." required />
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-primary w-100" type="submit">Fetch</button>
+            </div>
+        </form>
+
+        <div id="error" class="text-danger mb-3"></div>
+
+        <div id="program-container" class="text-start">
+            <img id="program-banner" class="banner img-fluid rounded" />
+            <h1 id="program-title" class="fw-bold"></h1>
+            <h4 id="program-tagline" class="text-muted"></h4>
+
+            <div id="program-description" class="mt-4"></div>
+
+            <div class="mt-4">
+                <h5>Goals</h5>
+                <ul id="program-goals" class="list-group list-group-flush"></ul>
+            </div>
+
+            <div class="mt-3">
+                <h5>Difficulties</h5>
+                <ul id="program-difficulties" class="list-group list-group-flush"></ul>
+            </div>
+
+            <div class="mt-3">
+                <span class="badge bg-secondary" id="program-slug"></span>
+            </div>
+        </div>
+    </div>
+
+    <script src="index.js"></script>
+
+</body>
+
+</html>
