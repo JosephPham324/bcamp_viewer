@@ -172,7 +172,8 @@ document.getElementById("form").addEventListener("submit", async function (e) {
   });
 
   try {
-    const res = await fetch(`https://thingproxy.freeboard.io/fetch/${encodeURIComponent(url)}`, { mode: "cors" });
+    const res = await fetch(url);
+
     if (!res.ok) throw new Error(`Proxy fetch failed: ${res.status}`);
     const html = await res.text();
 
