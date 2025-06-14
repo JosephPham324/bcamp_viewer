@@ -172,10 +172,8 @@ document.getElementById("form").addEventListener("submit", async function (e) {
   });
 
   try {
-    const proxyBase = "https://api.allorigins.win/raw?url=";
-
-    const res = await fetch(proxyBase + encodeURIComponent(url));
-
+    const res = await fetch(`https://thingproxy.freeboard.io/fetch/${encodeURIComponent(url)}`, { mode: "cors" });
+    if (!res.ok) throw new Error(`Proxy fetch failed: ${res.status}`);
     const html = await res.text();
 
     const doc = new DOMParser().parseFromString(html, "text/html");
