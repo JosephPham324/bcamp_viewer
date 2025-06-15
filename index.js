@@ -172,7 +172,10 @@ document.getElementById("form").addEventListener("submit", async function (e) {
   });
 
   try {
-    const res = await fetch(url);
+    const workerUrl = "https://my-proxy.quangnhatpham-dev.workers.dev";
+    const targetUrl = encodeURIComponent(url);
+
+    const res = await fetch(`${workerUrl}?url=${targetUrl}`);
 
     if (!res.ok) throw new Error(`Proxy fetch failed: ${res.status}`);
     const html = await res.text();
