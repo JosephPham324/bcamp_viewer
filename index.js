@@ -17,7 +17,7 @@ function renderWorkoutTable(dayIndex, workout, weekdayNames = ["Sun", "Mon", "Tu
   debugIcon.textContent = "❓";
   debugIcon.style.cursor = "pointer";
   debugIcon.style.color = "#0d6efd"; // Bootstrap primary blue
-  debugIcon.title = "Hover to view JSON"; // fallback tooltip
+  debugIcon.title = "Hover to view JSON <button class='btn btn-sm btn-outline-primary copy-json'>Copy content</button>"; // fallback tooltip
 
   // Use Bootstrap tooltip with <pre> block
   debugIcon.setAttribute("data-bs-toggle", "popover");
@@ -28,7 +28,6 @@ function renderWorkoutTable(dayIndex, workout, weekdayNames = ["Sun", "Mon", "Tu
     `
     <div style="width:50vw;max-height:80vh;overflow:auto;">
       <pre style="white-space:pre-wrap;font-size:0.75rem;">${jsonText}</pre>
-      <button class='btn btn-sm btn-outline-primary mt-2 copy-json'>Copy</button>
     </div>
   `
   );
