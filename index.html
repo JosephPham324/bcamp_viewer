@@ -5,25 +5,30 @@
     <meta charset="UTF-8">
     <title>Program Viewer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
     <style>
         body {
             padding-top: 60px;
             font-family: Arial, sans-serif;
         }
 
+
         #form {
-            max-width: 800px;
-            margin: 0 auto 40px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         #url {
-            height: 60px;
-            font-size: 1.25rem;
+            font-size: 1rem;
+            border-left: none;
+            /* blend with icon */
         }
 
-        #form button {
-            height: 60px;
-            font-size: 1.25rem;
+        .input-group-text {
+            font-size: 1.2rem;
         }
 
         .banner {
@@ -70,18 +75,50 @@
         .workout-table .exercise-name {
             font-weight: 600;
         }
+
+        .popover {
+            max-width: none !important;
+            /* remove Bootstrap's 276px limit */
+            width: auto !important;
+            /* let width be content-driven */
+        }
+
+        .popover .popover-header,
+        .popover .popover-body {
+            width: auto !important;
+            /* stretch with content */
+            max-width: 90vw;
+            /* optional safeguard so it doesn't overflow screen */
+        }
     </style>
 </head>
 
 <body>
 
-    <div class="container text-center">
-        <form id="form" class="row g-3 align-items-center justify-content-center">
-            <div class="col-md-9">
-                <input type="url" class="form-control" id="url" placeholder="Enter program URL..." required />
+    <div class="container-fluid text-center">
+        <form id="form" class="row g-2 align-items-center justify-content-center bg-light p-3 rounded shadow-sm mb-4">
+            <!-- URL Input -->
+            <div class="col-lg-8 col-md-12">
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-primary text-white">
+                        <i class="bi bi-link-45deg"></i>
+                    </span>
+                    <input type="url" class="form-control" id="url" placeholder="Enter program URL..." required />
+                </div>
             </div>
-            <div class="col-md-3">
-                <button class="btn btn-primary w-100" type="submit">Fetch</button>
+
+            <!-- Fetch Button -->
+            <div class="col-lg-2 col-md-6 d-grid">
+                <button class="btn btn-primary btn-lg" type="submit">
+                    <i class="bi bi-cloud-download me-1"></i> Fetch
+                </button>
+            </div>
+
+            <!-- Export Button -->
+            <div class="col-lg-2 col-md-6 d-grid">
+                <button id="exportExcel" class="btn btn-success btn-lg" type="button">
+                    <i class="bi bi-file-earmark-excel me-1"></i> Export
+                </button>
             </div>
         </form>
 
@@ -108,6 +145,7 @@
                 <span class="badge bg-secondary" id="program-slug"></span>
             </div>
         </div>
+
     </div>
 
     <script src="index.js"></script>

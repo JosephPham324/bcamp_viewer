@@ -1,10 +1,41 @@
 function renderWorkoutTable(dayIndex, workout, weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]) {
   const wrapper = document.createElement("div");
   wrapper.className = "workout-card";
+  wrapper.dataset.json = JSON.stringify(workout);
+
+  // Store JSON for debugging
+  const jsonText = JSON.stringify(workout, null, 2);
+
+  const header = document.createElement("div");
+  header.className = "d-flex align-items-center justify-content-between";
 
   const title = document.createElement("h5");
   title.textContent = `Day ${dayIndex + 1} (${weekdayNames[dayIndex]})`;
-  wrapper.appendChild(title);
+
+  // 🔹 Debug icon
+  const debugIcon = document.createElement("span");
+  debugIcon.textContent = "❓";
+  debugIcon.style.cursor = "pointer";
+  debugIcon.style.color = "#0d6efd"; // Bootstrap primary blue
+  debugIcon.title = "Hover to view JSON"; // fallback tooltip
+
+  // Use Bootstrap tooltip with <pre> block
+  debugIcon.setAttribute("data-bs-toggle", "popover");
+  debugIcon.setAttribute("data-bs-html", "true");
+  debugIcon.setAttribute("data-bs-trigger", "click"); // click to toggle
+  debugIcon.setAttribute(
+    "data-bs-content",
+    `
+    <div style="width:50vw;max-height:80vh;overflow:auto;">
+      <pre style="white-space:pre-wrap;font-size:0.75rem;">${jsonText}</pre>
+      <button class='btn btn-sm btn-outline-primary mt-2 copy-json'>Copy</button>
+    </div>
+  `
+  );
+
+  header.appendChild(title);
+  header.appendChild(debugIcon);
+  wrapper.appendChild(header);
 
   const table = document.createElement("table");
   table.className = "table workout-table";
@@ -158,8 +189,28 @@ function renderWorkoutTable(dayIndex, workout, weekdayNames = ["Sun", "Mon", "Tu
   table.appendChild(tbody);
   wrapper.appendChild(table);
 
+  setTimeout(() => {
+    const popover = new bootstrap.Popover(debugIcon, {
+      html: true,
+      sanitize: false,
+      container: "body",
+      placement: "right",
+    });
+
+    // Delegate copy button click
+    document.body.addEventListener("click", (e) => {
+      if (e.target.classList.contains("copy-json")) {
+        navigator.clipboard.writeText(jsonText).then(() => {
+          e.target.textContent = "Copied!";
+          setTimeout(() => (e.target.textContent = "Copy"), 2000);
+        });
+      }
+    });
+  }, 0);
+
   return wrapper;
 }
+
 document.getElementById("form").addEventListener("submit", async function (e) {
   e.preventDefault();
   const url = document.getElementById("url").value;
@@ -287,5 +338,113 @@ document.getElementById("form").addEventListener("submit", async function (e) {
   } catch (err) {
     error.textContent = "Error: " + err.message;
     throw err;
+  }
+});
+document.getElementById("exportExcel").addEventListener("click", function () {
+  try {
+    const wb = XLSX.utils.book_new();
+
+    const workoutCards = document.querySelectorAll(".workout-card");
+    if (!workoutCards.length) {
+      alert("No workouts to export!");
+      return;
+    }
+
+    const sessions = [];
+    workoutCards.forEach((card) => {
+      const json = card.dataset.json ? JSON.parse(card.dataset.json) : null;
+      if (json) sessions.push(json);
+    });
+
+    if (!sessions.length) {
+      alert("No JSON data found in cards");
+      return;
+    }
+
+    // Group by week → day
+    const weeksMap = {};
+    sessions.forEach((s) => {
+      if (!weeksMap[s.week]) weeksMap[s.week] = {};
+      weeksMap[s.week][s.day] = s;
+    });
+
+    const aoa = [];
+    let currentRow = 0;
+
+    Object.keys(weeksMap)
+      .sort((a, b) => a - b)
+      .forEach((weekNum) => {
+        const days = weeksMap[weekNum];
+        const dayKeys = Object.keys(days).sort((a, b) => a - b);
+
+        // Week title row
+        aoa[currentRow++] = [`=== Week ${parseInt(weekNum) + 1} ===`];
+
+        dayKeys.forEach((dayNum) => {
+          const session = days[dayNum];
+
+          // --- Session title row ---
+          aoa[currentRow++] = [`Day ${parseInt(session.day) + 1}`];
+
+          // --- Header row ---
+          aoa[currentRow] = ["#", "Exercise", "Sets", "Reps", "Intensity", "Note"];
+          currentRow++;
+
+          // --- Exercises rows ---
+          session.exercises.forEach((ex, idx) => {
+            const sets = ex.sets?.length || 0;
+            let reps = "-";
+            let intensity = "-";
+            if (ex.sets?.length) {
+              const st = ex.sets[0];
+              reps =
+                st.target_type === "reps_range" ? `${st.target_min}-${st.target_max}` : `${st.target}${st.target_type === "reps_max" ? "+" : ""}`;
+              intensity = st.intensity !== undefined ? (st.intensity_unit === "%" ? `${st.intensity}%` : `RPE ${st.intensity}`) : "-";
+            }
+
+            aoa[currentRow++] = [
+              idx + 1, // #
+              ex.name, // Exercise
+              sets, // Sets
+              reps, // Reps
+              intensity, // Intensity
+              ex.notes || "", // Note
+            ];
+          });
+
+          // Blank row after each session
+          aoa[currentRow++] = [];
+        });
+
+        // Extra blank row after each week
+        aoa[currentRow++] = [];
+      });
+
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+    const range = XLSX.utils.decode_range(ws["!ref"]);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell_address = { c: C, r: R };
+        const cell_ref = XLSX.utils.encode_cell(cell_address);
+        if (!ws[cell_ref]) continue;
+
+        ws[cell_ref].s = {
+          border: {
+            top: { style: "thin", color: "#000" },
+            bottom: { style: "thin", color: "#000" },
+            left: { style: "thin", color: "#000" },
+            right: { style: "thin", color: "#000" },
+          },
+        };
+      }
+    }
+
+    XLSX.utils.book_append_sheet(wb, ws, "Program");
+
+    XLSX.writeFile(wb, "program_export.xlsx");
+  } catch (err) {
+    console.error(err);
+    alert("Export failed: " + err.message);
   }
 });
